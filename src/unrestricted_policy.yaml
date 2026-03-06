@@ -1,0 +1,34 @@
+# JAX policy (UNRESTRICTED)
+#
+# DANGEROUS: Use only for interactive debugging or authorized tasks.
+# Still prevents most destructive system-wide commands.
+
+repo_root: "__REPO_ROOT__"
+
+files:
+  max_read_bytes: 1000000
+  max_write_bytes: 1000000
+
+commands:
+  timeout_s: 300
+  deny_patterns:
+    - "\bsudo\b"
+    - "rm\s+-rf\s+/"
+    - "rm\s+-rf\s+\$HOME"
+    - "mkfs"
+    - "dd if=/dev/zero"
+    - "> /dev/sda"
+    - "reboot"
+    - "shutdown"
+  allow_patterns:
+    - ".*" # ALLOW ALL (subject to deny_patterns and safety gate)
+
+git:
+  default_remote: origin
+  default_branch: master
+
+ollama:
+  base_url_env: OLLAMA_BASE_URL
+  default_base_url: http://127.0.0.1:11434
+  # default_model: qwen3-coder:latest
+  default_model: deepseek-coder:latest

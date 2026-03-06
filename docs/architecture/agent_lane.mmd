@@ -1,0 +1,68 @@
+%%{init: {'theme': 'base', 'themeVariables': {'primaryColor': '#2196F3', 'primaryTextColor': '#fff', 'primaryBorderColor': '#1976D2', 'lineColor': '#555', 'secondaryColor': '#FFC107', 'tertiaryColor': '#4CAF50'}}}%%
+
+flowchart TB
+    subgraph CRON["Cron Scheduler (ai-admin VM)"]
+        C1["crontab<br/>full_org_ollama_headless.cron"]
+    end
+
+    subgraph INVOKE["invoke_role.sh Pipeline"]
+        I1["Acquire flock lock"]
+        I2["Pre-flight<br/>git pull, env, IDLE_SKIP"]
+        I3["Invoke ollama_headless.py"]
+        I4["Post-flight<br/>log outcome, release lock"]
+    end
+
+    subgraph RUNNER["ollama_headless.py Agent Loop"]
+        R1["Load Policy<br/>(restricted YAML)"]
+        R2["Assemble System Prompt<br/>(prompt_loader.py)"]
+        R3["Ollama /api/chat<br/>(tool calling mode)"]
+        R4{"Model response<br/>has tool calls?"}
+        R5["Hybrid Tool Extraction<br/>(native JSON + markdown)"]
+        R6["Policy-Gated Execution<br/>(allow/deny check)"]
+        R7["Return tool results<br/>to model"]
+        R8["Self-Audit +<br/>Hallucination Detection"]
+        R9["Git commit & push"]
+    end
+
+    subgraph TOOLS["Tool Layer (12 tools)"]
+        T1["list_files"]
+        T2["read_file / write_file"]
+        T3["run_cmd (policy-gated)"]
+        T4["grep_search"]
+        T5["git_status / git_diff"]
+        T6["git_commit / git_push"]
+        T7["request_permission"]
+    end
+
+    subgraph OLLAMA["Ollama Server (localhost:11434)"]
+        O1["deepseek-coder:latest<br/>or qwen3-coder:latest"]
+    end
+
+    subgraph TIERS["Tier-to-Lane Mapping"]
+        TM1["T1-T3: Claude Code<br/>(proprietary, 10 roles)"]
+        TM2["T4-T7: Ollama Headless<br/>(local LLM, 16 roles)"]
+    end
+
+    C1 --> I1
+    I1 --> I2
+    I2 --> I3
+    I3 --> R1
+    R1 --> R2
+    R2 --> R3
+    R3 --> R4
+    R4 -- "Yes" --> R5
+    R5 --> R6
+    R6 --> TOOLS
+    TOOLS --> R7
+    R7 --> R3
+    R4 -- "No / step limit" --> R8
+    R8 --> R9
+    R9 --> I4
+    R3 <--> O1
+
+    style CRON fill:#1565C0,color:#fff
+    style INVOKE fill:#2E7D32,color:#fff
+    style RUNNER fill:#E65100,color:#fff
+    style TOOLS fill:#6A1B9A,color:#fff
+    style OLLAMA fill:#00838F,color:#fff
+    style TIERS fill:#455A64,color:#fff

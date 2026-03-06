@@ -1,0 +1,52 @@
+# JAX policy (RESTRICTED)
+#
+# NOTE: This agent runs fully unattended via cron.
+# Keep deny rules strict and expand allow rules gradually.
+
+repo_root: "__REPO_ROOT__"
+
+files:
+  max_read_bytes: 250000
+  max_write_bytes: 500000
+
+commands:
+  timeout_s: 120
+  deny_patterns:
+    - "\bsudo\b"
+    - "rm\s+-rf"
+    - "\.\./"
+    - "curl"
+    - "wget"
+  allow_patterns:
+    - "^ls( .*)?$"
+    - "^cat( .*)?$"
+    - "^grep( .*)?$"
+    - "^find( .*)?$"
+    - "^whoami$"
+    - "^pwd$"
+    - "^python3? (.*)$"
+    - "^pytest( .*)?$"
+    - "^(npm|pnpm|yarn) (test|lint|build)( .*)?$"
+    - "^make( .*)?$"
+    - "^mkdir( -p)? scripts/tmp/.*$"
+    - "^chmod \\+x scripts/tmp/.*$"
+    - "^scripts/tmp/.*$"
+    - "^rm( -f)? scripts/tmp/.*$"
+    - "^git status( .*)?$"
+    - "^git diff( .*)?$"
+    - "^git log( .*)?$"
+    - "^git add( .*)?$"
+    - "^git commit( .*)?$"
+    - "^git push( .*)?$"
+    - "^git pull( .*)?$"
+    - "^git stash( .*)?$"
+
+git:
+  default_remote: origin
+  default_branch: master
+
+ollama:
+  base_url_env: OLLAMA_BASE_URL
+  default_base_url: http://127.0.0.1:11434
+  # default_model: qwen3-coder:latest
+  default_model: deepseek-coder:latest
